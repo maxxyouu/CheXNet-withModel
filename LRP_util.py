@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 import cv2
-from imagenet_index import index2class
 import torch.nn.functional as F
 
 def preprocess_image(img):

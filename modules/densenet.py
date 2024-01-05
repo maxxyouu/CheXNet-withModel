@@ -94,29 +94,31 @@ class _DenseBlock(nn.ModuleDict):
         return self.cat(features, 1)
     
     def relprop(self, R, alpha = 1):
-        R = self.cat.relprop(R, alpha)
-
-        # do it in reverse order
-        # decompose the relevance value and for the gradient of the same color, add them up for fusion
+        """
+            # do it in reverse order
+            # decompose the relevance value and for the gradient of the same color, add them up for fusion
             # do it yourself first then distribute the rest to its corresponding slots
-        # at the end, add up the tensor gradients at each slot
+            # at the end, add up the tensor gradients at each slot
+        """
 
-        modules_reversed = reversed(self.items())
-        # a list of list, index represents the layer index and the value in the index is a list of accumulating relevance tensors from previous connections
-        module_Rs = []
+        R = self.cat.relprop(R, alpha)
+        denseblock_modules = [(name, layer) for name, layer in self.items() if 'denselayer' in name]
+        modules_reversed = reversed(denseblock_modules)
+        module_Rs = [[] for _ in range(len(R))]
 
-        for i, module in enumerate(modules_reversed):
+        for i, (name, layer) in enumerate(modules_reversed):
 
             # accumulate the relevance values for each layer
             for layer_index, rel in enumerate(R):
-                if layer_index not in module_Rs:
-                    module_Rs[layer_index] = []
                 module_Rs[layer_index].append(rel)
             
             # update the R list for the next iteration
-            layer = module[-1]
-            R = layer.relprop(sum(module_Rs[-(i+1)]), alpha) # self.modules["denselayer%d" % (i + 1)].relprop(r, alpha)
-
+            R = layer.relprop(sum(module_Rs[-(i+1)]), alpha)
+        
+        # make one last operation
+        assert(len(R) == 1)
+        module_Rs[0].append(R[0])
+        R = sum(module_Rs[0])
         return R
 
 class _Transition(Sequential):
@@ -242,7 +244,7 @@ class DenseNet(nn.Module):
     def CLRP(self, x, maxindex = [None]):
         if maxindex == [None]:
             maxindex = torch.argmax(x, dim=1)
-        R = torch.ones(x.shape).cuda()
+        R = torch.ones(x.shape).cuda() if torch.cuda.is_available() else torch.ones(x.shape)
         R /= -self.num_classes
         for i in range(R.size(0)):
             R[i, maxindex[i]] = 1
@@ -285,7 +287,7 @@ class DenseNet(nn.Module):
         R = self.classifier.relprop(R, 1)
         R = R.reshape_as(self.avgpool.Y)
         R = self.avgpool.relprop(R, 1)
-        R = ReLU.relprop(R)
+        R = self.relu5.relprop(R)
         R4 = self.features.norm5.relprop(R, 1)
 
         if mode == 'denseblock4':

@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from modules.layers import Linear, Sequential
 from read_data import ChestXrayDataSet
 
 from modules.densenet import densenet121
@@ -105,7 +106,7 @@ def main():
     model.eval()
 
     for i, batch_data in enumerate(test_loader):
-        inp, target = batch_data
+        name, inp, target = batch_data
         if device == 'cuda':
             target = target.cuda()
         gt = torch.cat((gt, target), 0)
@@ -125,16 +126,15 @@ class DenseNet121(nn.Module):
     """
     def __init__(self, out_size):
         super(DenseNet121, self).__init__()
-        # self.densenet121 = torchvision.models.densenet121(pretrained=True)
         self.densenet121 = densenet121()
         num_ftrs = self.densenet121.classifier.in_features
-        self.densenet121.classifier = nn.Sequential(
-            nn.Linear(num_ftrs, out_size),
-            nn.Sigmoid()
+        self.densenet121.classifier = Sequential(
+            Linear(num_ftrs, out_size),
+            # nn.Sigmoid()
         )
 
-    def forward(self, x):
-        x = self.densenet121(x)
+    def forward(self, x, mode='output', target_class = [None], xMode=False):
+        x = self.densenet121(x, mode, target_class, xMode)
         return x
 
 
