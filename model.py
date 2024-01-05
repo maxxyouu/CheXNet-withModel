@@ -115,6 +115,26 @@ def main():
         output = model(input_var)
         output_mean = output.view(bs, n_crops, -1).mean(1)
         pred = torch.cat((pred, output_mean.data), 0)
+        print('hello')
+
+    # correct = 0
+    # total = 0
+
+    # with torch.no_grad():
+    #     for (images, labels) in test_loader:
+
+    #         # format input
+    #         n_batches, n_crops, channels, height, width = images.size()
+    #         image_batch = torch.autograd.Variable(images.view(-1, channels, height, width))
+    #         # labels = tile(labels, 0, 10)
+
+    #         outputs = model(image_batch)
+    #         _, predicted = torch.max(outputs.data, 1) #predicted is class index
+    #         _, truth = torch.max(labels.data, 1)
+    #         total += labels.size(0)
+    #         correct += (predicted == truth).sum().item()
+
+    # print('Accuracy of the network on the test images: %d %%' % (100 * correct / total))
 
     # AUROCs = compute_AUCs(gt, pred)
     # AUROC_avg = np.array(AUROCs).mean()
@@ -143,7 +163,23 @@ def main():
 #         AUROCs.append(roc_auc_score(gt_np[:, i], pred_np[:, i]))
 #     return AUROCs
 
-
+classEncoding = {
+        'Atelectasis': torch.FloatTensor([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Consolidation': torch.FloatTensor([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Infiltration': torch.FloatTensor([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Pneumothorax': torch.FloatTensor([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Edema': torch.FloatTensor([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Emphysema': torch.FloatTensor([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Fibrosis': torch.FloatTensor([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+        'Effusion': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        'Pneumonia': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
+        'Pleural_Thickening': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
+        'Cardiomegaly': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+        'Nodule': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
+        'Hernia': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
+        'Mass': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+        'No Finding': torch.FloatTensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+}
 class DenseNet121(nn.Module):
     """Model modified.
 
