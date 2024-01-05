@@ -9,12 +9,9 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.backends.cudnn as cudnn
-import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from read_data import ChestXrayDataSet
-# from sklearn.metrics import roc_auc_score
 
 from modules.densenet import densenet121
 
