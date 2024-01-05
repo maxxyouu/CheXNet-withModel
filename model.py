@@ -24,7 +24,9 @@ N_CLASSES = 14
 CLASS_NAMES = [ 'Atelectasis', 'Cardiomegaly', 'Effusion', 'Infiltration', 'Mass', 'Nodule', 'Pneumonia',
                 'Pneumothorax', 'Consolidation', 'Edema', 'Emphysema', 'Fibrosis', 'Pleural_Thickening', 'Hernia']
 DATA_DIR = './ChestX-ray14/images'
-TEST_IMAGE_LIST = './ChestX-ray14/labels/test_list.txt'
+# TEST_IMAGE_LIST = './ChestX-ray14/labels/test_list.txt' # NOTE: origin
+TEST_IMAGE_LIST = './ChestX-ray14/labels/bbox_list.txt'
+
 BATCH_SIZE = 1
 
 def map_state_dict(checkpoint):
@@ -116,52 +118,6 @@ def main():
         output_mean = output.view(bs, n_crops, -1).mean(1)
         pred = torch.cat((pred, output_mean.data), 0)
         print('hello')
-
-    # correct = 0
-    # total = 0
-
-    # with torch.no_grad():
-    #     for (images, labels) in test_loader:
-
-    #         # format input
-    #         n_batches, n_crops, channels, height, width = images.size()
-    #         image_batch = torch.autograd.Variable(images.view(-1, channels, height, width))
-    #         # labels = tile(labels, 0, 10)
-
-    #         outputs = model(image_batch)
-    #         _, predicted = torch.max(outputs.data, 1) #predicted is class index
-    #         _, truth = torch.max(labels.data, 1)
-    #         total += labels.size(0)
-    #         correct += (predicted == truth).sum().item()
-
-    # print('Accuracy of the network on the test images: %d %%' % (100 * correct / total))
-
-    # AUROCs = compute_AUCs(gt, pred)
-    # AUROC_avg = np.array(AUROCs).mean()
-    # print('The average AUROC is {AUROC_avg:.3f}'.format(AUROC_avg=AUROC_avg))
-    # for i in range(N_CLASSES):
-    #     print('The AUROC of {} is {}'.format(CLASS_NAMES[i], AUROCs[i]))
-
-
-# def compute_AUCs(gt, pred):
-#     """Computes Area Under the Curve (AUC) from prediction scores.
-
-#     Args:
-#         gt: Pytorch tensor on GPU, shape = [n_samples, n_classes]
-#           true binary labels.
-#         pred: Pytorch tensor on GPU, shape = [n_samples, n_classes]
-#           can either be probability estimates of the positive class,
-#           confidence values, or binary decisions.
-
-#     Returns:
-#         List of AUROCs of all classes.
-#     """
-#     AUROCs = []
-#     gt_np = gt.cpu().numpy()
-#     pred_np = pred.cpu().numpy()
-#     for i in range(N_CLASSES):
-#         AUROCs.append(roc_auc_score(gt_np[:, i], pred_np[:, i]))
-#     return AUROCs
 
 class DenseNet121(nn.Module):
     """Model modified.
