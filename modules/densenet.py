@@ -291,7 +291,7 @@ class DenseNet(nn.Module):
         R4 = self.features.norm5.relprop(R, 1)
 
         if mode == 'denseblock4':
-            r_weight4 = self._compute_weights(R, denseblock4, xMode)
+            r_weight4 = self._compute_weights(R4, denseblock4, xMode)
             r_cam4 = denseblock4 * r_weight4
             r_cam4 = torch.sum(r_cam4, dim=(1), keepdim=True)
             return r_cam4, z
