@@ -296,30 +296,50 @@ class DenseNet(nn.Module):
             r_cam4 = torch.sum(r_cam4, dim=(1), keepdim=True)
             return r_cam4, z
         elif mode == 'denseblock3':
-            R = self.features.denseblock4.relprop(R4, 1)
-            R3 = self.features.transition3.relprop(R, 1)
-            r_weight3 = self._compute_weights(R3, denseblock3, xMode)
-            r_cam3 = denseblock3 * r_weight3
+            # R = self.features.denseblock4.relprop(R4, 1)
+            # R3 = self.features.transition3.relprop(R, 1)
+            # r_weight3 = self._compute_weights(R3, denseblock3, xMode)
+            # r_cam3 = denseblock3 * r_weight3
+
+            R3 = self.features.denseblock4.relprop(R4, 1)
+            r_weight3 = self._compute_weights(R3, denseblock3_trans, xMode)
+            r_cam3 = denseblock3_trans * r_weight3
             r_cam3 = torch.sum(r_cam3, dim=(1), keepdim=True)
             return r_cam3, z
         elif mode == 'denseblock2':
-            R = self.denseblock4.relprop(R4, 1)
+            # R = self.features.denseblock4.relprop(R4, 1)
+            # R = self.features.transition3.relprop(R, 1)
+            # R = self.features.denseblock3.relprop(R, 1)
+            # R2 = self.features.transition2.relprop(R, 1)
+            # r_weight2 = self._compute_weights(R2, denseblock2, xMode)
+            # r_cam2 = denseblock2 * r_weight2
+            # r_cam2 = torch.sum(r_cam2, dim=(1), keepdim=True)
+
+            R = self.features.denseblock4.relprop(R4, 1)
             R = self.features.transition3.relprop(R, 1)
-            R = self.denseblock3.relprop(R, 1)
-            R2 = self.features.transition2.relprop(R, 1)
-            r_weight2 = self._compute_weights(R2, denseblock2, xMode)
-            r_cam2 = denseblock2 * r_weight2
+            R2 = self.features.denseblock3.relprop(R, 1)
+            r_weight2 = self._compute_weights(R2, denseblock2_trans, xMode)
+            r_cam2 = denseblock2_trans * r_weight2
             r_cam2 = torch.sum(r_cam2, dim=(1), keepdim=True)
             return r_cam2, z
         elif mode == 'denseblock1':
-            R = self.denseblock4.relprop(R4, 1)
+            # R = self.features.denseblock4.relprop(R4, 1)
+            # R = self.features.transition3.relprop(R, 1)
+            # R = self.features.denseblock3.relprop(R, 1)
+            # R = self.features.transition2.relprop(R, 1)
+            # R = self.features.denseblock2.relprop(R, 1)
+            # R1 = self.features.transition1.relprop(R, 1)
+            # r_weight1 = self._compute_weights(R1, denseblock1, xMode)
+            # r_cam1 = denseblock1 * r_weight1
+            # r_cam1 = torch.sum(r_cam1, dim=(1), keepdim=True)
+
+            R = self.features.denseblock4.relprop(R4, 1)
             R = self.features.transition3.relprop(R, 1)
-            R = self.denseblock3.relprop(R, 1)
+            R = self.features.denseblock3.relprop(R, 1)
             R = self.features.transition2.relprop(R, 1)
-            R = self.denseblock2.relprop(R, 1)
-            R1 = self.features.transition1.relprop(R, 1)
-            r_weight1 = self._compute_weights(R1, denseblock1, xMode)
-            r_cam1 = denseblock1 * r_weight1
+            R1 = self.features.denseblock2.relprop(R, 1)
+            r_weight1 = self._compute_weights(R1, denseblock1_trans, xMode)
+            r_cam1 = denseblock1_trans * r_weight1
             r_cam1 = torch.sum(r_cam1, dim=(1), keepdim=True)
             return r_cam1, z
 
@@ -338,7 +358,7 @@ class DenseNet(nn.Module):
         weights = R / (np.sum(activations, axis=(2, 3), keepdims=True) + 1e-7) # per channel division operation
         
         weights = np.sum(weights, axis=(2, 3), keepdims=True)
-        return torch.tensor(weights, device=activations.device)
+        return torch.tensor(weights, device='cuda' if torch.cuda.is_available() else 'cpu')
 
     def _compute_weights(self, R, activations, xMode):
         # xrelevance 

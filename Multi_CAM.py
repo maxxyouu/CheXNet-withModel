@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--models', type=str, default='densenet121',
                     help='resnet50 or vgg16 or vgg19')
-parser.add_argument('--target_layer', type=str, default='denseblock3',
+parser.add_argument('--target_layer', type=str, default='denseblock4',
                     help='target_layer')
 parser.add_argument('--target_class', type=int, default=None,
                     help='target_class')
@@ -116,13 +116,96 @@ for i, batch_data in enumerate(test_loader):
     # assert(target[args.target_class] == 1)
 
     in_tensor = preprocess_image(img).cuda() if device == 'cuda' else preprocess_image(img)
-    R_CAM, output = model(in_tensor, args.target_layer, [args.target_class])
+    R_CAM, output = model(in_tensor, args.target_layer, [args.target_class], True)
 
     if args.target_class == None:
         assert('should not happens during evaluation')
         maxindex = np.argmax(output.data.cpu().numpy())
     else:
         maxindex = args.target_class
+
+    # output[:, maxindex].sum().backward(retain_graph=True)
+    # activation = value['activations']  # [1, 2048, 7, 7]
+    # gradient = value['gradients']  # [1, 2048, 7, 7]
+    # gradient_2 = gradient ** 2
+    # gradient_3 = gradient ** 3
+
+    # gradient_ = torch.mean(gradient, dim=(2, 3), keepdim=True)
+    # grad_cam = activation * gradient_
+    # grad_cam = torch.sum(grad_cam, dim=(0, 1))
+    # grad_cam = torch.clamp(grad_cam, min=0)
+    # grad_cam = grad_cam.data.cpu().numpy() if device == 'cuda' else grad_cam.data.numpy()
+    # grad_cam = cv2.resize(grad_cam, (224, 224))
+
+
+    # alpha_numer = gradient_2
+    # alpha_denom = 2 * gradient_2 + torch.sum(activation * gradient_3, axis=(2, 3), keepdims=True)  # + 1e-2
+    # alpha = alpha_numer / alpha_denom
+    # w = torch.sum(alpha * torch.clamp(gradient, 0), axis=(2, 3), keepdims=True)
+    # grad_campp = activation * w
+    # grad_campp = torch.sum(grad_campp, dim=(0, 1))
+    # grad_campp = torch.clamp(grad_campp, min=0)
+    # grad_campp = grad_campp.data.cpu().numpy() if device == 'cuda' else grad_campp.data.numpy()
+    # grad_campp = cv2.resize(grad_campp, (224, 224))
+
+    fig = plt.figure(figsize=(10, 10))
+    plt.subplots_adjust(bottom=0.01)
+
+    plt.subplot(2, 5, 1)
+    plt.imshow(img_show)
+    plt.title('Original')
+    plt.axis('off')
+
+    plt.subplot(2, 5, 1 + 5)
+    plt.imshow(img_show)
+    plt.axis('off')
+
+    # plt.subplot(2, 5, 2)
+    # plt.imshow((grad_cam),cmap='seismic')
+    # plt.imshow(img_show, alpha=.5)
+    # plt.title('Grad CAM', fontsize=15)
+    # plt.axis('off')
+
+    # plt.subplot(2, 5, 2 + 5)
+    # plt.imshow(img_show*threshold(grad_cam)[...,np.newaxis])
+    # plt.title('Grad CAM', fontsize=15)
+    # plt.axis('off')
+
+    # plt.subplot(2, 5, 3)
+    # plt.imshow((grad_campp),cmap='seismic')
+    # plt.imshow(img_show, alpha=.5)
+    # plt.title('Grad CAM++', fontsize=15)
+    # plt.axis('off')
+
+    # plt.subplot(2, 5, 3 + 5)
+    # plt.imshow(img_show*threshold(grad_campp)[...,np.newaxis])
+    # plt.title('Grad CAM++', fontsize=15)
+    # plt.axis('off')
+
+    R_CAM = tensor2image(R_CAM)
+
+    plt.subplot(2, 5, 4)
+    plt.imshow((R_CAM),cmap='seismic')
+    plt.imshow(img_show, alpha=.5)
+    plt.title('Relevance_CAM', fontsize=15)
+    plt.axis('off')
+
+    plt.subplot(2, 5, 4 + 5)
+    plt.imshow(img_show*threshold(R_CAM)[...,np.newaxis])
+    plt.title('Relevance_CAM', fontsize=15)
+    plt.axis('off')
+
+    # plt.imshow((R_CAM),cmap='seismic')
+    # plt.imshow(img_show, alpha=.5)
+    # plt.title('Relevance_CAM - {}'.format(args.target_layer), fontsize=15)
+    # plt.axis('off')
+
+    plt.tight_layout()
+    plt.draw()
+    plt.show()
+    plt.clf()
+    plt.close()
+    
 
 # for path in path_s:
 #     img_path_long = './picture/{}'.format(path)
